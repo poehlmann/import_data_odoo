@@ -1,4 +1,4 @@
-nombre,tipo_producto,id
-zapatito,consu,1
-zapatote,service,2
-zapatango,product,3
+nombre,tipo_producto,id,precio,categoria
+zapatito,consu,1,55,gbs
+zapatote,service,2,26,gbs
+zapatango,product,3,18,gbs
