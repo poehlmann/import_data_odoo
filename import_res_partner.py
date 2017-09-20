@@ -27,6 +27,7 @@ object_proxy = xmlrpclib.ServerProxy(url + 'object')
 uid = common_proxy.login(DB, USER, PASS)
 
 
+
 def _verify(data, table, types, ids):
     # category_model = object_proxy.get_model("product.public.category")
     # ids = category_model.search([("name", "=", category)])
@@ -47,11 +48,14 @@ def _verify(data, table, types, ids):
             val = object_proxy.execute(DB, uid, PASS, table, 'create', vals_attribute_val)
             return [val]
     elif types == 'search_category':
-        args = [('id', '=', ids)]
-        id = object_proxy.execute(DB, uid, PASS, table, 'search', args)
-        vals_product_subcategory = {'parent_id': id[0], 'name': data}
-        val = object_proxy.execute(DB, uid, PASS, table, 'create', vals_product_subcategory)
-        return [val]
+        if id:
+            return id
+        else:
+            args = [('id', '=', ids)]
+            id = object_proxy.execute(DB, uid, PASS, table, 'search', args)
+            vals_product_subcategory = {'parent_id': id[0], 'name': data}
+            val = object_proxy.execute(DB, uid, PASS, table, 'create', vals_product_subcategory)
+            return [val]
     else:
         if id:
             return id
@@ -60,34 +64,62 @@ def _verify(data, table, types, ids):
             val = object_proxy.execute(DB, uid, PASS, table, 'create', vals_product_category)
             return [val]
 
+def _add_attribute(field_attribute,value_attribute):
+    if(value_attribute!=''):
+        id_attribute = _verify(field_attribute, 'product.attribute', 'attribute', 0)
+        id_attribute_val= _verify(value_attribute, 'product.attribute.value', 'attribute_val',
+                                  id_attribute[0])
 
+        product_attribute_line = object_proxy.execute(DB, uid, PASS,
+                                                      'product.attribute.line', 'create',
+                                                      {'product_tmpl_id': id_product_template,
+                                                       'attribute_id': id_attribute[0],
+                                                       'value_ids': [[6, 0, id_attribute_val]]
+                                                       })
 def _create(estado):
     global id_product_template, id_product_category
     if estado is True:
-        path_file = './GBS.csv'
+        path_file = './roghur_data.csv'
         archive = csv.DictReader(open(path_file))
         cont = 1
 
         for field in archive:
-            id_category = _verify(field['categoria'], 'product.public.category', '', 0)
 
-            id_subcategory = _verify(field['subcategoria'], 'product.public.category', 'search_category', id_category)
+            # primer nivel
+            id_category = _verify(field['grupo'], 'product.public.category', '', 0)
+            # segundo nivel
+            id_subcategory = _verify(field['sub_grupo'], 'product.public.category', 'search_category', id_category)
+            # clase 2
+            # tercer nivel
+            id_subcategory_2 = _verify(field['clase 2'], 'product.public.category', 'search_category', id_subcategory)
 
-            id_brand = _verify(field['Marca'], 'product.brand', '', 0)
+            id_brand = _verify(field['MARCA'], 'product.brand', '', 0)
 
             if (id_subcategory != ''):
                 id_category = id_subcategory
+            elif(id_subcategory_2):
+                id_category = id_subcategory_2
 
-            vals_product_template = {'product_brand_id': id_brand[0], 'public_categ_ids': [(6, 0, id_category)],
-                                     'name': field['Modelo'], 'standar_price': field['precio'],
-                                     'list_price': field['precio'],
-                                     'mes_type': 'fixed', 'uom_id': 1, 'iom_po_id': 1, 'type': 'product',
-                                     'procure_method': 'make_to_stock', 'cost_method': 'standard',
+            vals_product_template = {'product_brand_id': id_brand[0],
+                                     'public_categ_ids': [(6, 0, id_category)],
+                                     'description_sale': field['DESCRIPCIÓN'],
+                                     'name': field['ITEM'],
+                                     'standar_price': field['PRECIO'],
+                                     'list_price': field['PRECIO'],
+                                     'mes_type': 'fixed',
+                                     'uom_id': 1,
+                                     'iom_po_id': 1,
+                                     'type': 'product',
+                                     'procure_method': 'make_to_stock',
+                                     'cost_method': 'standard',
                                      'supply_method': 'buy',
-                                     'sale_ok': True, 'website_published': 1, 'x_idroghur': field['id']}
+                                     'sale_ok': True,
+                                     'website_published': 1,
+                                     'x_idroghur': field['No']
+                                     }
 
             product = object_proxy.execute(DB, uid, PASS, 'product.template', 'search',
-                                           [('x_idroghur', '=', field['id'])])
+                                           [('x_idroghur', '=', field['No'])])
 
             if product:
                 product_id = product and product[0]
@@ -96,21 +128,48 @@ def _create(estado):
             else:
                 id_product_template = object_proxy.execute(DB, uid, PASS, 'product.template', 'create',
                                                            vals_product_template)
-                id_attribute = _verify('Potencia (W)', 'product.attribute', 'attribute', 0)
-                id_attribute_val = _verify(field['Potencia (W)'], 'product.attribute.value', 'attribute_val',
-                                           id_attribute[0])
 
-                product_attribute_line = object_proxy.execute(DB, uid, PASS,
-                                                              'product.attribute.line', 'create',
-                                                              {'product_tmpl_id': id_product_template,
-                                                               'attribute_id': id_attribute[0],
-                                                               'value_ids': [[6, 0, id_attribute_val]]
-                                                               })
+                # atributos - RUBRO
+                _add_attribute('RUBRO',field['RUBRO'])
+                # atributo - SEGMENTO
+                _add_attribute('SEGMENTO',field['SEGMENTO'])
+                #atributo - FASES
+                _add_attribute('FASES',field['FASES'])
+                #POTENCIA
+                _add_attribute('POTENCIA',field['POTENCIA'])
+                #TIPO
+                _add_attribute('TIPO',field['TIPO'])
+                #CAUDAL
+                _add_attribute('CAUDAL',field['CAUDAL'])
+                #ALTURA
+                _add_attribute('ALTURA',field['ALTURA'])
+                #DIAMETRO DE LA BOMBA
+                _add_attribute('DIAMETRO DE LA BOMBA',field['DIAMETRO DE LA BOMBA'])
+                #TIPO DE LIQUIDO
+                _add_attribute('TIPO DE LIQUIDO',field['TIPO DE LIQUIDO'])
+                #DIAMETRO
+                _add_attribute('DIAMETRO',field['DIAMETRO'])
+                #CORRIENTE DE SALIDA MAXIMA (AMPERAJE)
+                _add_attribute('CORRIENTE DE SALIDA MAXIMA (AMPERAJE)',field['CORRIENTE DE SALIDA MAXIMA (AMPERAJE)'])
+                # TIPO DE COMBUSTIBLE
+                _add_attribute('TIPO DE COMBUSTIBLE',field['TIPO DE COMBUSTIBLE'])
                 if id_product_template:
                     cont += 1
                 else:
                     print "Error"
 
+
+# def _delete():
+#     path_file = './roghur_data.csv'
+#     archive = csv.DictReader(open(path_file))
+#     cont = 1
+#
+#     for field in archive:
+#         id = object_proxy.execute(DB, uid, PASS, "product.template" , 'unlink', [('x_idroghur', '=', field['No'])])
+#         # models.execute_kw(DB, uid, PASS, 'res.partner', 'unlink', [[id]])
+#         # check if the deleted record is still in the database
+#         # models.execute_kw(db, uid, password,
+#         #               'res.partner', 'search', [[['id', '=', id]]])
 
 # def _update(estado):
 #     if estado is True:
@@ -148,6 +207,7 @@ def _create(estado):
 #
 def __main__():
     print 'Ha comenzado el proceso'
+    # _delete()
     _create(True)
     # _update(True)
     # _update_mass(True)
