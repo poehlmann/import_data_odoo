@@ -7,6 +7,7 @@
 
 import csv
 import xmlrpclib
+import ast
 
 # HOST='192.168.20.87'
 # PORT=80
@@ -25,7 +26,6 @@ url = 'http://%s:%d/xmlrpc/' % (HOST, PORT)
 common_proxy = xmlrpclib.ServerProxy(url + 'common')
 object_proxy = xmlrpclib.ServerProxy(url + 'object')
 uid = common_proxy.login(DB, USER, PASS)
-
 
 
 def _verify(data, table, types, ids):
@@ -64,11 +64,12 @@ def _verify(data, table, types, ids):
             val = object_proxy.execute(DB, uid, PASS, table, 'create', vals_product_category)
             return [val]
 
-def _add_attribute(field_attribute,value_attribute):
-    if(value_attribute!=''):
+
+def _add_attribute(field_attribute, value_attribute):
+    if (value_attribute != ''):
         id_attribute = _verify(field_attribute, 'product.attribute', 'attribute', 0)
-        id_attribute_val= _verify(value_attribute, 'product.attribute.value', 'attribute_val',
-                                  id_attribute[0])
+        id_attribute_val = _verify(value_attribute, 'product.attribute.value', 'attribute_val',
+                                   id_attribute[0])
 
         product_attribute_line = object_proxy.execute(DB, uid, PASS,
                                                       'product.attribute.line', 'create',
@@ -76,6 +77,26 @@ def _add_attribute(field_attribute,value_attribute):
                                                        'attribute_id': id_attribute[0],
                                                        'value_ids': [[6, 0, id_attribute_val]]
                                                        })
+
+
+def _add_general_information(data):
+    if data != "":
+        field_array = data.split(';')
+        final_string = '{'
+        for field in field_array:
+
+            aux_array = field.split(':')
+            if field[0] != "" and field[1] != "":
+                final_string += "'" + aux_array[0].strip() + "'" + ":'" + aux_array[1] + "',"
+
+        final_string = final_string[:-1]
+        final_string += '}'
+        # print final_string
+        string_dict = ast.literal_eval(final_string)
+        assert type(string_dict) is dict
+        print string_dict
+
+
 def _create(estado):
     global id_product_template, id_product_category
     if estado is True:
@@ -84,6 +105,8 @@ def _create(estado):
         cont = 1
 
         for field in archive:
+
+            _add_general_information(field['RESUMEN'])
 
             # primer nivel
             id_category = _verify(field['grupo'], 'product.public.category', '', 0)
@@ -97,7 +120,7 @@ def _create(estado):
 
             if (id_subcategory != ''):
                 id_category = id_subcategory
-            elif(id_subcategory_2):
+            elif (id_subcategory_2):
                 id_category = id_subcategory_2
 
             vals_product_template = {'product_brand_id': id_brand[0],
@@ -130,29 +153,33 @@ def _create(estado):
                                                            vals_product_template)
 
                 # atributos - RUBRO
-                _add_attribute('RUBRO',field['RUBRO'])
+                _add_attribute('RUBRO', field['RUBRO'])
                 # atributo - SEGMENTO
-                _add_attribute('SEGMENTO',field['SEGMENTO'])
-                #atributo - FASES
-                _add_attribute('FASES',field['FASES'])
-                #POTENCIA
-                _add_attribute('POTENCIA',field['POTENCIA'])
-                #TIPO
-                _add_attribute('TIPO',field['TIPO'])
-                #CAUDAL
-                _add_attribute('CAUDAL',field['CAUDAL'])
-                #ALTURA
-                _add_attribute('ALTURA',field['ALTURA'])
-                #DIAMETRO DE LA BOMBA
-                _add_attribute('DIAMETRO DE LA BOMBA',field['DIAMETRO DE LA BOMBA'])
-                #TIPO DE LIQUIDO
-                _add_attribute('TIPO DE LIQUIDO',field['TIPO DE LIQUIDO'])
-                #DIAMETRO
-                _add_attribute('DIAMETRO',field['DIAMETRO'])
-                #CORRIENTE DE SALIDA MAXIMA (AMPERAJE)
-                _add_attribute('CORRIENTE DE SALIDA MAXIMA (AMPERAJE)',field['CORRIENTE DE SALIDA MAXIMA (AMPERAJE)'])
+                _add_attribute('SEGMENTO', field['SEGMENTO'])
+                # atributo - FASES
+                _add_attribute('FASES', field['FASES'])
+                # POTENCIA
+                _add_attribute('POTENCIA', field['POTENCIA'])
+                # TIPO
+                _add_attribute('TIPO', field['TIPO'])
+                # CAUDAL
+                _add_attribute('CAUDAL', field['CAUDAL'])
+                # ALTURA
+                _add_attribute('ALTURA', field['ALTURA'])
+                # DIAMETRO DE LA BOMBA
+                _add_attribute('DIAMETRO DE LA BOMBA', field['DIAMETRO DE LA BOMBA'])
+                # TIPO DE LIQUIDO
+                _add_attribute('TIPO DE LIQUIDO', field['TIPO DE LIQUIDO'])
+                # DIAMETRO
+                _add_attribute('DIAMETRO', field['DIAMETRO'])
+                # CORRIENTE DE SALIDA MAXIMA (AMPERAJE)
+                _add_attribute('CORRIENTE DE SALIDA MAXIMA (AMPERAJE)', field['CORRIENTE DE SALIDA MAXIMA (AMPERAJE)'])
                 # TIPO DE COMBUSTIBLE
-                _add_attribute('TIPO DE COMBUSTIBLE',field['TIPO DE COMBUSTIBLE'])
+                _add_attribute('TIPO DE COMBUSTIBLE', field['TIPO DE COMBUSTIBLE'])
+
+                # INFORMACION GENERAL
+                _add_general_information(field['RESUMEN'])
+
                 if id_product_template:
                     cont += 1
                 else:

@@ -1,9 +1,0 @@
-id,categoria,subcategoria,Marca,Modelo,tipo,Potencia (W),Electodo(mm),Corriente (A),mig-mag (Kg),plasma (corriente(A)),tipo aislacion,peso (kg),precio
-1,trs,soldadoras,GLADIATOR,IE-6150/1,INVERTER ,5100,"2-3,2",150,,,clase I,"4,3",4000
-2,gbs,soldadoras,GLADIATOR,IE 6200/5,INVERTER ,4220,2 -4,20-200,,,clase I,,156
-3,cvss,soldadoras,GLADIATOR,IE-8170,INVERTER ,3420,"2-3,2",20-170,,,clase I,"2,5",489
-4,gbs,soldadoras,GLADIATOR,IE-8250/5,INVERTER ,4900,2 - 4,20 - 250,,,clase I,7,354
-5,gbs,soldadoras,NEO,IE-10250/5,INVERTER ,4900,"2,5 - 5",250,,,clase I,"6,6",3489
-6,gbs,soldadoras,NEO,IE-11250,INVERTER ,5070,"2,5 - 4",250,,,clase I,"7,5",248
-7,gbs,soldadoras,GLADIATOR,ITE-8250,"INVERTER , TIG",6500,2 - 4,20 - 250,,,clase I,"8,3",3589
-8,gbs,soldadoras,NEO ,IM-9250/1," MIG,MAG",4980,"0,6 - 1,2",250,"15,5 - 20",,clase I,,
