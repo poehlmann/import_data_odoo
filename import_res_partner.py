@@ -84,17 +84,19 @@ def _add_general_information(data):
         field_array = data.split(';')
         final_string = '{'
         for field in field_array:
-
             aux_array = field.split(':')
             if field[0] != "" and field[1] != "":
                 final_string += "'" + aux_array[0].strip() + "'" + ":'" + aux_array[1] + "',"
-
         final_string = final_string[:-1]
         final_string += '}'
-        # print final_string
         string_dict = ast.literal_eval(final_string)
         assert type(string_dict) is dict
-        print string_dict
+        formating_string = " "
+        for value in string_dict:
+            if value != "" and string_dict[value] != "":
+                formating_string += value + " : " + string_dict[value] + "\n"
+        # print formating_string
+        return formating_string
 
 
 def _create(estado):
@@ -105,8 +107,6 @@ def _create(estado):
         cont = 1
 
         for field in archive:
-
-            _add_general_information(field['RESUMEN'])
 
             # primer nivel
             id_category = _verify(field['grupo'], 'product.public.category', '', 0)
@@ -122,10 +122,13 @@ def _create(estado):
                 id_category = id_subcategory
             elif (id_subcategory_2):
                 id_category = id_subcategory_2
-
+            if(field['RESUMEN']==''):
+                info_resu = "Sin informacion"
+            else:
+                info_resu=_add_general_information(field['RESUMEN'])
             vals_product_template = {'product_brand_id': id_brand[0],
                                      'public_categ_ids': [(6, 0, id_category)],
-                                     'description_sale': field['DESCRIPCIÓN'],
+                                     'description_sale':info_resu,
                                      'name': field['ITEM'],
                                      'standar_price': field['PRECIO'],
                                      'list_price': field['PRECIO'],
@@ -176,9 +179,6 @@ def _create(estado):
                 _add_attribute('CORRIENTE DE SALIDA MAXIMA (AMPERAJE)', field['CORRIENTE DE SALIDA MAXIMA (AMPERAJE)'])
                 # TIPO DE COMBUSTIBLE
                 _add_attribute('TIPO DE COMBUSTIBLE', field['TIPO DE COMBUSTIBLE'])
-
-                # INFORMACION GENERAL
-                _add_general_information(field['RESUMEN'])
 
                 if id_product_template:
                     cont += 1
